@@ -31,7 +31,7 @@ watch(q, (value) => {
                         <span v-if="c.state && c.state !== 'Maharashtra'"> · {{ c.state }}</span>
                     </div>
                 </div>
-                <Link :href="`/customers/${c.id}/edit`" class="btn btn-sm btn-outline-primary">Edit</Link>
+                <Link :href="`/customers/${c.id}`" class="btn btn-sm btn-outline-primary">Ledger</Link>
             </div>
         </div>
         <nav v-if="customers.last_page > 1" class="mt-3 d-flex gap-2">

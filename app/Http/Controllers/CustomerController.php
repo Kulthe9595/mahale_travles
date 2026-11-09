@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\Customer;
+use App\Models\Trip;
+use App\Support\Money;
 use App\Support\Gstin;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -46,6 +48,41 @@ class CustomerController extends Controller
         }
 
         return redirect('/customers')->with('success', 'Customer added.');
+    }
+
+    public function show(Customer $customer): Response
+    {
+        $trips = Trip::query()
+            ->withBilling()
+            ->where('customer_id', $customer->id)
+            ->whereRaw(Trip::SQL_INVOICE_TOTAL.' is not null')
+            ->with('car:id,registration_no')
+            ->orderByDesc('start_at')
+            ->orderByDesc('id')
+            ->get();
+
+        $bills = $trips->map(function (Trip $t) {
+            $total = Money::toPaise($t->invoice_total);
+            $paid = Money::toPaise($t->paid_total);
+
+            return [
+                'trip_id' => $t->id,
+                'invoice_no' => $t->invoice_no,
+                'date' => $t->start_at->format('d M Y'),
+                'car' => $t->car->registration_no,
+                'route' => trim(($t->pickup ?: '—').' → '.($t->drop ?: '—')),
+                'total' => Money::toDecimal($total),
+                'paid' => Money::toDecimal($paid),
+                'balance' => Money::toDecimal(max(0, $total - $paid)),
+                'balance_paise' => max(0, $total - $paid),
+            ];
+        });
+
+        return Inertia::render('Customers/Show', [
+            'customer' => $customer,
+            'bills' => $bills->map(fn ($b) => collect($b)->except('balance_paise'))->values(),
+            'outstanding' => Money::toDecimal((int) $bills->sum('balance_paise')),
+        ]);
     }
 
     public function edit(Customer $customer): Response
