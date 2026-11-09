@@ -1,0 +1,23 @@
+@import 'bootstrap/dist/css/bootstrap.min.css';
+
+:root {
+    --mt-brand: #0b5394;
+}
+
+body {
+    background: #f4f6f9;
+    font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+}
+
+.navbar-brand { font-weight: 700; }
+.bg-brand { background-color: var(--mt-brand) !important; }
+.btn-brand { background: var(--mt-brand); color: #fff; }
+.btn-brand:hover { background: #083d6e; color: #fff; }
+.money { font-variant-numeric: tabular-nums; }
+
+/* space for sticky action bars on phones */
+.has-sticky-bar { padding-bottom: 5rem; }
+.sticky-bar {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 1020;
+    background: #fff; border-top: 1px solid #dee2e6; padding: .75rem 1rem;
+}
