@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\BusinessSetting;
+use App\Support\Gstin;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
@@ -27,14 +28,14 @@ class SettingsController extends Controller
     {
         Gate::authorize('manage-settings');
 
-        $request->merge(['gstin' => $request->filled('gstin') ? strtoupper(trim($request->input('gstin'))) : null]);
+        $request->merge(['gstin' => Gstin::normalize($request->input('gstin'))]);
 
         $data = $request->validate([
             'name' => ['required', 'string', 'max:150'],
             'address' => ['nullable', 'string', 'max:500'],
             'phone' => ['nullable', 'string', 'max:20'],
             'email' => ['nullable', 'email', 'max:150'],
-            'gstin' => ['nullable', 'regex:/^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z][1-9A-Z]Z[0-9A-Z]$/'],
+            'gstin' => ['nullable', Gstin::RULE],
             'state' => ['required', 'string', 'max:60'],
             'sac_code' => ['required', 'string', 'max:10'],
             'gst_rate' => ['required', 'numeric', 'min:0', 'max:28'],
@@ -45,7 +46,7 @@ class SettingsController extends Controller
             'terms' => ['nullable', 'string', 'max:2000'],
             'logo' => ['nullable', 'image', 'max:1024'],
         ], [
-            'gstin.regex' => 'Enter a valid 15-character GSTIN.',
+            'gstin.regex' => Gstin::MESSAGE,
         ]);
 
         $settings = BusinessSetting::current();

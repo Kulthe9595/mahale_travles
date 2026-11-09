@@ -1,0 +1,93 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\Customer;
+use App\Support\Gstin;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Inertia\Inertia;
+use Inertia\Response;
+
+class CustomerController extends Controller
+{
+    public function index(Request $request): Response
+    {
+        $q = trim((string) $request->query('q'));
+
+        return Inertia::render('Customers/Index', [
+            'customers' => $this->searchQuery($q)->orderBy('name')->paginate(25)->withQueryString(),
+            'filters' => ['q' => $q],
+        ]);
+    }
+
+    public function search(Request $request): JsonResponse
+    {
+        $q = trim((string) $request->query('q'));
+
+        return response()->json(
+            $this->searchQuery($q)->orderBy('name')->limit(10)
+                ->get(['id', 'name', 'phone', 'email', 'state', 'gstin'])
+        );
+    }
+
+    public function create(): Response
+    {
+        return Inertia::render('Customers/Form', ['customer' => null]);
+    }
+
+    public function store(Request $request): RedirectResponse|JsonResponse
+    {
+        $customer = Customer::create($this->validated($request));
+
+        if ($request->expectsJson()) {
+            return response()->json(['customer' => $customer], 201);
+        }
+
+        return redirect('/customers')->with('success', 'Customer added.');
+    }
+
+    public function edit(Customer $customer): Response
+    {
+        return Inertia::render('Customers/Form', ['customer' => $customer]);
+    }
+
+    public function update(Request $request, Customer $customer): RedirectResponse
+    {
+        $customer->update($this->validated($request));
+
+        return redirect('/customers')->with('success', 'Customer updated.');
+    }
+
+    private function searchQuery(string $q)
+    {
+        $query = Customer::query();
+        if ($q === '') {
+            return $query;
+        }
+
+        $digits = preg_replace('/\D/', '', $q);
+
+        return $query->where(function ($w) use ($q, $digits) {
+            $w->where('name', 'like', "%{$q}%");
+            if (strlen($digits) >= 3) {
+                $w->orWhere('phone_digits', 'like', "%{$digits}%");
+            }
+        });
+    }
+
+    private function validated(Request $request): array
+    {
+        $request->merge(['gstin' => Gstin::normalize($request->input('gstin'))]);
+
+        return $request->validate([
+            'name' => ['required', 'string', 'max:150'],
+            'phone' => ['nullable', 'string', 'max:25'],
+            'email' => ['nullable', 'email', 'max:150'],
+            'address' => ['nullable', 'string', 'max:500'],
+            'state' => ['nullable', 'string', 'max:60'],
+            'gstin' => ['nullable', Gstin::RULE],
+        ], ['gstin.regex' => Gstin::MESSAGE]);
+    }
+}
