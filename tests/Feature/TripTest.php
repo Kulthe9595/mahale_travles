@@ -157,4 +157,36 @@ class TripTest extends TestCase
         $this->assertSame('Mumbai', $trip->fresh()->drop);
         $this->assertSame(TripStatus::Completed, $trip->fresh()->status);
     }
+
+    public function test_save_and_create_bill_in_one_step(): void
+    {
+        $this->actingAs($this->owner)
+            ->post('/trips', $this->outstationPayload(['generate_invoice' => true]))
+            ->assertSessionHasNoErrors();
+
+        $trip = Trip::firstOrFail();
+        $this->assertSame('7743.00', $trip->activeInvoice->total);
+    }
+
+    public function test_save_and_update_bill_refreshes_unlocked_invoice(): void
+    {
+        $this->actingAs($this->owner)->post('/trips', $this->outstationPayload(['generate_invoice' => true]));
+        $trip = Trip::firstOrFail();
+
+        $this->actingAs($this->owner)
+            ->put("/trips/{$trip->id}", $this->outstationPayload(['end_km' => 10620, 'generate_invoice' => true]))
+            ->assertSessionHasNoErrors();
+
+        $this->assertSame(1, $trip->invoices()->count());
+        $this->assertSame('7440.00', $trip->fresh()->activeInvoice->items()->first()->amount);
+    }
+
+    public function test_generate_invoice_on_booked_trip_is_ignored(): void
+    {
+        $this->actingAs($this->owner)->post('/trips', $this->outstationPayload([
+            'status' => 'booked', 'end_at' => null, 'end_km' => null, 'generate_invoice' => true,
+        ]))->assertSessionHasNoErrors();
+
+        $this->assertNull(Trip::firstOrFail()->activeInvoice);
+    }
 }

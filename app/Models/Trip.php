@@ -8,6 +8,7 @@ use App\Enums\TripStatus;
 use App\Enums\TripType;
 use App\Support\Money;
 use Carbon\CarbonImmutable;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -42,6 +43,60 @@ class Trip extends Model
             'end_km' => 'integer',
             'billing_inputs' => 'array',
         ];
+    }
+
+    public const SQL_INVOICE_TOTAL = "(select i.total from invoices i where i.trip_id = trips.id and i.status = 'active' order by i.id desc limit 1)";
+
+    public const SQL_INVOICE_NO = "(select i.invoice_no from invoices i where i.trip_id = trips.id and i.status = 'active' order by i.id desc limit 1)";
+
+    public const SQL_PAID_TOTAL = '(select coalesce(sum(p.amount), 0) from payments p where p.trip_id = trips.id)';
+
+    /** Adds invoice_no, invoice_total and paid_total columns for lists and reports. */
+    public function scopeWithBilling(Builder $query): Builder
+    {
+        return $query->select('trips.*')
+            ->selectRaw(self::SQL_INVOICE_NO.' as invoice_no')
+            ->selectRaw(self::SQL_INVOICE_TOTAL.' as invoice_total')
+            ->selectRaw(self::SQL_PAID_TOTAL.' as paid_total');
+    }
+
+    public function scopeWherePaymentStatus(Builder $query, ?string $status): Builder
+    {
+        $inv = self::SQL_INVOICE_TOTAL;
+        $paid = self::SQL_PAID_TOTAL;
+
+        return match ($status) {
+            'unbilled' => $query->whereRaw("{$inv} is null"),
+            'unpaid' => $query->whereRaw("{$inv} is not null and {$paid} <= 0"),
+            'partly_paid' => $query->whereRaw("{$inv} is not null and {$paid} > 0 and {$paid} < {$inv}"),
+            'paid' => $query->whereRaw("{$inv} is not null and {$paid} >= {$inv}"),
+            default => $query,
+        };
+    }
+
+    public function scopeSearch(Builder $query, ?string $q): Builder
+    {
+        $q = trim((string) $q);
+        if ($q === '') {
+            return $query;
+        }
+
+        $reg = Car::normalizeRegistration($q);
+        $digits = preg_replace('/\D/', '', $q);
+
+        return $query->where(function (Builder $w) use ($q, $reg, $digits) {
+            $w->whereHas('customer', function (Builder $c) use ($q, $digits) {
+                $c->where('name', 'like', "%{$q}%");
+                if (strlen($digits) >= 4) {
+                    $c->orWhere('phone_digits', 'like', "%{$digits}%");
+                }
+            })
+                ->orWhereHas('invoices', fn (Builder $i) => $i->where('invoice_no', 'like', "%{$q}%"));
+
+            if (strlen($reg) >= 3) {
+                $w->orWhereHas('car', fn (Builder $c) => $c->where('registration_no', 'like', "%{$reg}%"));
+            }
+        });
     }
 
     public function customer(): BelongsTo

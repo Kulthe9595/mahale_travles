@@ -36,6 +36,7 @@ class TripRequest extends FormRequest
             'end_km' => [$endRule, 'integer', 'min:0', 'max:9999999', 'gte:start_km'],
             'status' => [$this->requireEndDetails ? 'nullable' : 'required', Rule::enum(TripStatus::class)],
             'notes' => ['nullable', 'string', 'max:1000'],
+            'generate_invoice' => ['nullable', 'boolean'],
             'billing' => ['array'],
             'billing.gst_enabled' => ['boolean'],
             'billing.package_mode' => ['nullable', 'in:fixed,per_day'],
@@ -65,7 +66,7 @@ class TripRequest extends FormRequest
         $data = $this->validated();
         $billing = $data['billing'] ?? [];
         $billing['gst_enabled'] = (bool) ($billing['gst_enabled'] ?? false);
-        unset($data['billing']);
+        unset($data['billing'], $data['generate_invoice']);
 
         return $data + ['billing_inputs' => $billing];
     }
