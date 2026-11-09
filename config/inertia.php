@@ -71,7 +71,7 @@ return [
 
     'pages' => [
 
-        'ensure_pages_exist' => true,
+        'ensure_pages_exist' => (bool) env('INERTIA_ENSURE_PAGES_EXIST', false),
 
         'paths' => [
 
