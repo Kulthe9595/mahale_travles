@@ -83,3 +83,77 @@ body {
     position: fixed; left: 0; right: 0; bottom: 0; z-index: 1020;
     background: #fff; border-top: 1px solid #dee2e6; padding: .75rem 1rem;
 }
+
+/* ---------- Phone bottom tab bar (notched active tab) ---------- */
+@property --mt-x {
+    syntax: '<percentage>';
+    inherits: true;
+    initial-value: 10%;
+}
+:root { --mt-tabbar-h: 64px; }
+
+.mt-tabbar {
+    --mt-x: calc(10% + var(--mt-tab, 0) * 20%);
+    position: fixed; left: 10px; right: 10px;
+    bottom: calc(8px + env(safe-area-inset-bottom));
+    height: var(--mt-tabbar-h);
+    display: grid; grid-template-columns: repeat(5, 1fr);
+    z-index: 1040;
+    transition: --mt-x .45s cubic-bezier(.34, 1.4, .64, 1), transform .25s ease, opacity .25s ease;
+}
+.mt-tabbar-hidden { transform: translateY(140%); opacity: 0; pointer-events: none; }
+.mt-tabbar-bg {
+    position: absolute; inset: 0; border-radius: 22px; background: var(--mt-ink);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, .28);
+    -webkit-mask: radial-gradient(circle 36px at var(--mt-x) -4px, transparent 98%, #000 100%);
+            mask: radial-gradient(circle 36px at var(--mt-x) -4px, transparent 98%, #000 100%);
+}
+.mt-tab-bubble {
+    position: absolute; top: -26px; left: var(--mt-x);
+    width: 54px; height: 54px; margin-left: -27px; border-radius: 50%;
+    background: radial-gradient(circle at 35% 30%, #ff4d52, var(--mt-red) 55%, var(--mt-red-dark));
+    box-shadow: 0 6px 16px rgba(224, 27, 34, .45);
+}
+.mt-tab {
+    position: relative; z-index: 1;
+    display: flex; flex-direction: column; align-items: center; justify-content: flex-end;
+    gap: 2px; padding: 0 0 9px; border: 0; background: none;
+    color: #b9b9b9; text-decoration: none; font-size: 11px; font-weight: 600;
+    -webkit-tap-highlight-color: transparent;
+}
+.mt-tab-icon { width: 24px; height: 24px; fill: currentColor; transition: transform .45s cubic-bezier(.34, 1.4, .64, 1); }
+.mt-tab-label { transition: opacity .2s; }
+.mt-tab.active { color: #fff; }
+.mt-tab.active .mt-tab-icon { transform: translateY(-30px) scale(1.12); }
+.mt-tab.active .mt-tab-label { opacity: .95; }
+.mt-tab:not(.active):active .mt-tab-icon { transform: scale(.88); }
+
+/* Settings sheet */
+.mt-sheet-backdrop { position: fixed; inset: 0; background: rgba(0, 0, 0, .4); z-index: 1041; }
+.mt-sheet {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 1042;
+    background: #fff; border-radius: 20px 20px 0 0;
+    padding: 8px 12px calc(16px + env(safe-area-inset-bottom));
+    box-shadow: 0 -10px 30px rgba(0, 0, 0, .2);
+}
+.mt-sheet-handle { width: 40px; height: 5px; border-radius: 3px; background: #d5d5d5; margin: 4px auto 10px; }
+.mt-sheet-item {
+    display: flex; align-items: center; gap: 12px; width: 100%;
+    border: 0; background: none; padding: 14px 8px; font-size: 1.05rem; font-weight: 500;
+    color: var(--mt-ink); border-bottom: 1px solid #f0f0f0; text-align: left;
+}
+.mt-sheet-item:last-child { border-bottom: 0; }
+.mt-sheet-icon { width: 28px; text-align: center; font-size: 1.2rem; }
+.mt-sheet-enter-active, .mt-sheet-leave-active { transition: transform .32s cubic-bezier(.2, .9, .3, 1.1); }
+.mt-sheet-enter-from, .mt-sheet-leave-to { transform: translateY(105%); }
+.mt-fade-enter-active, .mt-fade-leave-active { transition: opacity .25s; }
+.mt-fade-enter-from, .mt-fade-leave-to { opacity: 0; }
+
+/* Page content clears the bar; the bill form's total bar sits above it */
+@media (max-width: 991.98px) {
+    main.mt-main { padding-bottom: calc(var(--mt-tabbar-h) + 40px + env(safe-area-inset-bottom)) !important; }
+    .sticky-bar { bottom: calc(var(--mt-tabbar-h) + 40px + env(safe-area-inset-bottom)); left: 10px; right: 10px; border-radius: 14px; border: 1px solid #e5e5e5; }
+    .has-sticky-bar { padding-bottom: 7.5rem; }
+}
+.mt-page-enter-active { transition: opacity .22s ease, transform .22s ease; }
+.mt-page-enter-from { opacity: 0; transform: translateY(8px); }

@@ -1,6 +1,7 @@
 <script setup>
 import { Link, usePage, router } from '@inertiajs/vue3';
 import { computed } from 'vue';
+import BottomNav from '../Components/BottomNav.vue';
 
 defineProps({ title: { type: String, default: '' } });
 
@@ -31,11 +32,6 @@ const logout = () => router.post('/logout');
                 <img src="/brand/logo.png" alt="Mahale's Travels">
                 <span>Mahale Tours<small>BILLING</small></span>
             </Link>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
-                    data-bs-target="#mainNav" aria-controls="mainNav" aria-expanded="false"
-                    aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
             <div id="mainNav" class="collapse navbar-collapse">
                 <ul class="navbar-nav me-auto">
                     <li v-for="link in links" :key="link.href" class="nav-item">
@@ -55,10 +51,16 @@ const logout = () => router.post('/logout');
         </div>
     </nav>
 
-    <main class="container-lg py-3">
-        <h1 v-if="title" class="h4 mb-3">{{ title }}</h1>
-        <div v-if="flash.success" class="alert alert-success py-2">{{ flash.success }}</div>
-        <div v-if="flash.error" class="alert alert-danger py-2">{{ flash.error }}</div>
-        <slot />
+    <main class="container-lg py-3 mt-main">
+        <Transition name="mt-page" appear>
+            <div :key="page.url">
+                <h1 v-if="title" class="h4 mb-3">{{ title }}</h1>
+                <div v-if="flash.success" class="alert alert-success py-2">{{ flash.success }}</div>
+                <div v-if="flash.error" class="alert alert-danger py-2">{{ flash.error }}</div>
+                <slot />
+            </div>
+        </Transition>
     </main>
+
+    <BottomNav v-if="user" />
 </template>
