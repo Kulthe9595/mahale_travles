@@ -31,4 +31,24 @@ class BusinessSetting extends Model
 
         return $settings;
     }
+
+    /** Contact details from mahalestravels.in; only fills fields that are still empty. */
+    public function fillDefaults(): self
+    {
+        $defaults = [
+            'phone' => '+91 97656 79191',
+            'email' => 'mahale.veeru1@gmail.com',
+            'address' => 'Navale Colony, Nashik–Pune Highway, near Shivaji Maharaj Statue, Nashik Road, Maharashtra',
+        ];
+
+        foreach ($defaults as $field => $value) {
+            if (blank($this->{$field})) {
+                $this->{$field} = $value;
+            }
+        }
+
+        $this->save();
+
+        return $this;
+    }
 }

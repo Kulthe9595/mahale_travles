@@ -71,8 +71,10 @@ const submit = () => form.post('/settings', { forceFormData: true, preserveScrol
                     <div class="invalid-feedback d-block">{{ form.errors.logo }}</div>
                 </div>
             </div>
-            <div class="mt-4">
+            <div class="mt-4 d-flex flex-wrap gap-2 align-items-center">
                 <button class="btn btn-brand" type="submit" :disabled="form.processing">Save settings</button>
+                <a href="/settings/backup" class="btn btn-outline-secondary">⬇ Download backup</a>
+                <span class="small text-muted">Save a backup to your phone or Google Drive once a week.</span>
             </div>
         </form>
     </AppLayout>

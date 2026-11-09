@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\BackupController;
+use App\Http\Controllers\InstallController;
 use App\Http\Controllers\BillPreviewController;
 use App\Http\Controllers\TripController;
 use App\Http\Controllers\CarController;
@@ -17,6 +19,8 @@ use App\Http\Controllers\SettingsController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware('guest')->group(function () {
+    Route::get('/install', [InstallController::class, 'create'])->name('install');
+    Route::post('/install', [InstallController::class, 'store'])->middleware('throttle:10,1');
     Route::get('/login', [LoginController::class, 'create'])->name('login');
     Route::post('/login', [LoginController::class, 'store']);
 });
@@ -59,4 +63,5 @@ Route::middleware(['auth', 'app.user'])->group(function () {
 
     Route::get('/settings', [SettingsController::class, 'edit'])->name('settings.edit');
     Route::post('/settings', [SettingsController::class, 'update'])->name('settings.update');
+    Route::get('/settings/backup', BackupController::class)->name('settings.backup');
 });

@@ -67,6 +67,9 @@ return [
 
     'timezone' => 'Asia/Kolkata',
 
+    // One-time web installer code (shared hosting). Leave empty to disable /install.
+    'install_code' => env('INSTALL_CODE'),
+
     /*
     |--------------------------------------------------------------------------
     | Application Locale Configuration
