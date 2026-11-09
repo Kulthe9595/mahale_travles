@@ -21,6 +21,7 @@ class PwaTest extends TestCase
         $this->assertSame('Mahale Tours', $manifest['short_name']);
         $this->assertSame('/', $manifest['start_url']);
         $this->assertSame('standalone', $manifest['display']);
+        $this->assertSame('#e01b22', $manifest['theme_color']);
         $sizes = array_column($manifest['icons'], 'sizes');
         $this->assertContains('192x192', $sizes);
         $this->assertContains('512x512', $sizes);

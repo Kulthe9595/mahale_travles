@@ -160,10 +160,13 @@ class InvoicePdfService
         return (new QRCode($options))->render($data);
     }
 
+    /** Uploaded logo from Settings, else the bundled brand logo. */
     private function logoDataUri(BusinessSetting $settings): ?string
     {
         if (! $settings->logo_path || ! Storage::disk('public')->exists($settings->logo_path)) {
-            return null;
+            $bundled = public_path('brand/logo.png');
+
+            return is_file($bundled) ? 'data:image/png;base64,'.base64_encode(file_get_contents($bundled)) : null;
         }
 
         $disk = Storage::disk('public');

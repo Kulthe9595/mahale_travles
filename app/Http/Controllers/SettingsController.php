@@ -23,7 +23,7 @@ class SettingsController extends Controller
         return Inertia::render('Settings/Edit', [
             'settings' => $settings,
             'states' => IndianStates::names(),
-            'logoUrl' => $settings->logo_path ? Storage::disk('public')->url($settings->logo_path) : null,
+            'logoUrl' => $settings->logo_path ? Storage::disk('public')->url($settings->logo_path) : '/brand/logo.png',
         ]);
     }
 

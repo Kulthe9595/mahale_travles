@@ -25,9 +25,12 @@ const logout = () => router.post('/logout');
 </script>
 
 <template>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-brand sticky-top">
+    <nav class="navbar navbar-expand-lg navbar-light navbar-mt sticky-top">
         <div class="container-lg">
-            <Link class="navbar-brand" href="/">Mahale Tours</Link>
+            <Link class="navbar-brand d-flex align-items-center gap-2" href="/">
+                <img src="/brand/logo.png" alt="Mahale's Travels">
+                <span>Mahale Tours<small>BILLING</small></span>
+            </Link>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
                     data-bs-target="#mainNav" aria-controls="mainNav" aria-expanded="false"
                     aria-label="Toggle navigation">
@@ -44,9 +47,9 @@ const logout = () => router.post('/logout');
                         <Link class="nav-link" :class="{ active: isActive('/settings') }" href="/settings">Settings</Link>
                     </li>
                 </ul>
-                <div v-if="user" class="d-flex align-items-center gap-2 text-white-50 small">
+                <div v-if="user" class="d-flex align-items-center gap-2 text-muted small">
                     <span>{{ user.name }}</span>
-                    <button class="btn btn-sm btn-outline-light" type="button" @click="logout">Logout</button>
+                    <button class="btn btn-sm btn-outline-secondary" type="button" @click="logout">Logout</button>
                 </div>
             </div>
         </div>

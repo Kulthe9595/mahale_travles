@@ -1,19 +1,81 @@
 @import 'bootstrap/dist/css/bootstrap.min.css';
 
+/* Brand colours taken from the Mahale's Travels logo */
 :root {
-    --mt-brand: #0b5394;
+    --mt-red: #e01b22;
+    --mt-red-dark: #b00000;
+    --mt-ink: #2b2b2b;
+    --mt-orange: #ec7f1e;
+    --bs-primary: #e01b22;
+    --bs-primary-rgb: 224, 27, 34;
+    --bs-link-color: #c4161c;
+    --bs-link-color-rgb: 196, 22, 28;
+    --bs-link-hover-color: #b00000;
+    --bs-link-hover-color-rgb: 176, 0, 0;
 }
 
 body {
-    background: #f4f6f9;
+    background: #f6f6f7;
+    color: var(--mt-ink);
     font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
 }
 
-.navbar-brand { font-weight: 700; }
-.bg-brand { background-color: var(--mt-brand) !important; }
-.btn-brand { background: var(--mt-brand); color: #fff; }
-.btn-brand:hover { background: #083d6e; color: #fff; }
 .money { font-variant-numeric: tabular-nums; }
+
+/* Top bar: white with the logo, red underline */
+.navbar-mt {
+    background: #fff;
+    border-bottom: 3px solid var(--mt-red);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, .05);
+}
+.navbar-mt .navbar-brand img { height: 40px; width: auto; }
+.navbar-mt .navbar-brand span { font-weight: 700; color: var(--mt-ink); font-size: 1.05rem; line-height: 1.1; }
+.navbar-mt .navbar-brand small { display: block; color: var(--mt-orange); font-weight: 600; font-size: .7rem; letter-spacing: .04em; }
+.navbar-mt .nav-link { color: var(--mt-ink); font-weight: 500; }
+.navbar-mt .nav-link:hover { color: var(--mt-red); }
+.navbar-mt .nav-link.active { color: var(--mt-red); font-weight: 700; }
+
+/* Buttons */
+.btn-brand, .btn-primary {
+    --bs-btn-color: #fff;
+    --bs-btn-bg: var(--mt-red);
+    --bs-btn-border-color: var(--mt-red);
+    --bs-btn-hover-color: #fff;
+    --bs-btn-hover-bg: var(--mt-red-dark);
+    --bs-btn-hover-border-color: var(--mt-red-dark);
+    --bs-btn-active-color: #fff;
+    --bs-btn-active-bg: var(--mt-red-dark);
+    --bs-btn-active-border-color: var(--mt-red-dark);
+    --bs-btn-disabled-color: #fff;
+    --bs-btn-disabled-bg: #e9787c;
+    --bs-btn-disabled-border-color: #e9787c;
+}
+.btn-outline-primary {
+    --bs-btn-color: var(--mt-red);
+    --bs-btn-border-color: var(--mt-red);
+    --bs-btn-hover-color: #fff;
+    --bs-btn-hover-bg: var(--mt-red);
+    --bs-btn-hover-border-color: var(--mt-red);
+    --bs-btn-active-color: #fff;
+    --bs-btn-active-bg: var(--mt-red-dark);
+    --bs-btn-active-border-color: var(--mt-red-dark);
+}
+.btn-check:checked + .btn-outline-primary { background: var(--mt-red); border-color: var(--mt-red); color: #fff; }
+.form-check-input:checked { background-color: var(--mt-red); border-color: var(--mt-red); }
+.form-control:focus, .form-select:focus, .form-check-input:focus {
+    border-color: #f08a8e;
+    box-shadow: 0 0 0 .2rem rgba(224, 27, 34, .15);
+}
+.text-bg-primary { background-color: var(--mt-red) !important; }
+.text-bg-info { background-color: var(--mt-orange) !important; color: #fff !important; }
+.card-header { background: #fafafa; }
+
+/* Login */
+.login-bg {
+    background: var(--mt-ink);
+    background-image: linear-gradient(160deg, #2b2b2b 0%, #2b2b2b 62%, #3a3a3a 100%);
+}
+.login-card { border-top: 5px solid var(--mt-red); }
 
 /* space for sticky action bars on phones */
 .has-sticky-bar { padding-bottom: 5rem; }

@@ -7,12 +7,15 @@ const submit = () => form.post('/login', { onFinish: () => form.reset('password'
 
 <template>
     <Head title="Login" />
-    <div class="min-vh-100 d-flex align-items-center bg-brand">
+    <div class="min-vh-100 d-flex align-items-center login-bg">
         <div class="container" style="max-width: 420px">
-            <div class="card shadow-sm">
+            <div class="card shadow login-card">
                 <div class="card-body p-4">
-                    <h1 class="h4 text-center mb-1">Mahale Tours and Travels</h1>
-                    <p class="text-muted text-center small mb-4">Billing</p>
+                    <div class="text-center mb-3">
+                        <img src="/brand/logo.png" alt="Mahale's Travels" style="height: 96px; width: auto">
+                    </div>
+                    <h1 class="h5 text-center mb-1">Mahale Tours and Travels</h1>
+                    <p class="text-center small mb-4" style="color: var(--mt-orange); font-weight: 600">Billing</p>
                     <form @submit.prevent="submit" novalidate>
                         <div class="mb-3">
                             <label class="form-label" for="email">Email</label>

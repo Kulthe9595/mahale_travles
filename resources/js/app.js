@@ -12,7 +12,7 @@ createInertiaApp({
     setup({ el, App, props, plugin }) {
         createApp({ render: () => h(App, props) }).use(plugin).mount(el);
     },
-    progress: { color: '#0b5394' },
+    progress: { color: '#e01b22' },
 });
 
 if (import.meta.env.PROD && 'serviceWorker' in navigator) {

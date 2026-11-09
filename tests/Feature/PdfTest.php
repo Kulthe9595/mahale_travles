@@ -188,4 +188,12 @@ class PdfTest extends TestCase
         $this->assertStringContainsString('08 Nov 2026', $html);
         $this->assertStringStartsWith('%PDF', $this->pdf()->receipt($payment)->output());
     }
+
+    public function test_bill_uses_bundled_brand_logo_when_none_uploaded(): void
+    {
+        BusinessSetting::current()->update(['logo_path' => null]);
+        $logo = 'data:image/png;base64,'.base64_encode(file_get_contents(public_path('brand/logo.png')));
+
+        $this->assertStringContainsString($logo, $this->pdf()->invoiceHtml($this->gstInvoice()));
+    }
 }

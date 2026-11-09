@@ -95,7 +95,7 @@
             <div><strong>{{ $words }}</strong></div>
 
             @if ($payments->isNotEmpty())
-                <table class="totals" style="margin-top: 10px; border: 1px solid #ccd5e0">
+                <table class="totals" style="margin-top: 10px; border: 1px solid #d9d9d9">
                     @foreach ($payments as $p)
                         <tr>
                             <td>{{ $p['label'] }} <span class="muted small">({{ $p['date'] }}, {{ $p['mode'] }})</span></td>
