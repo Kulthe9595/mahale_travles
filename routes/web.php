@@ -9,6 +9,8 @@ use App\Http\Controllers\DriverController;
 use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\PdfController;
+use App\Http\Controllers\PublicBillController;
+use App\Http\Controllers\ShareController;
 use App\Http\Controllers\SettingsController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -17,6 +19,11 @@ Route::middleware('guest')->group(function () {
     Route::get('/login', [LoginController::class, 'create'])->name('login');
     Route::post('/login', [LoginController::class, 'store']);
 });
+
+Route::get('/b/{token}', PublicBillController::class)
+    ->where('token', '[A-Za-z0-9]{40,64}')
+    ->middleware('throttle:60,1')
+    ->name('bills.public');
 
 Route::post('/logout', [LoginController::class, 'destroy'])->middleware('auth')->name('logout');
 
@@ -36,6 +43,10 @@ Route::middleware(['auth', 'app.user'])->group(function () {
     Route::delete('/payments/{payment}', [PaymentController::class, 'destroy'])->name('payments.destroy');
     Route::get('/invoices/{invoice}/pdf', [PdfController::class, 'invoice'])->name('invoices.pdf');
     Route::get('/payments/{payment}/receipt', [PdfController::class, 'receipt'])->name('payments.receipt');
+    Route::post('/invoices/{invoice}/share', [ShareController::class, 'invoice'])->name('invoices.share');
+    Route::post('/invoices/{invoice}/email', [ShareController::class, 'email'])->name('invoices.email');
+    Route::post('/invoices/{invoice}/link', [ShareController::class, 'link'])->name('invoices.link');
+    Route::post('/payments/{payment}/share', [ShareController::class, 'payment'])->name('payments.share');
     Route::post('/bill-preview', BillPreviewController::class)->name('bill.preview');
 
     Route::get('/settings', [SettingsController::class, 'edit'])->name('settings.edit');

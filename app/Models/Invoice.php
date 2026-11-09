@@ -66,6 +66,11 @@ class Invoice extends Model
         return $this->belongsTo(Invoice::class, 'revision_of_id');
     }
 
+    public function shareLogs(): HasMany
+    {
+        return $this->hasMany(ShareLog::class)->latest('shared_at');
+    }
+
     public function scopeActive(Builder $query): Builder
     {
         return $query->where('status', self::STATUS_ACTIVE);
