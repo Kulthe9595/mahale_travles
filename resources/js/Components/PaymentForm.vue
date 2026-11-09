@@ -21,25 +21,25 @@ const submit = () => form.post(`/trips/${props.tripId}/payments`, {
 
 <template>
     <form class="row g-2" @submit.prevent="submit">
-        <div class="col-6 col-md-3">
+        <div class="col-6">
             <input v-model="form.amount" type="number" step="any" inputmode="decimal" class="form-control"
                    :class="{ 'is-invalid': form.errors.amount }" placeholder="Amount ₹">
             <div class="invalid-feedback">{{ form.errors.amount }}</div>
         </div>
-        <div class="col-6 col-md-3">
+        <div class="col-6">
             <input v-model="form.paid_on" type="date" class="form-control" :class="{ 'is-invalid': form.errors.paid_on }">
         </div>
-        <div class="col-6 col-md-2">
+        <div class="col-6">
             <select v-model="form.mode" class="form-select">
                 <option value="upi">UPI</option>
                 <option value="cash">Cash</option>
                 <option value="bank">Bank</option>
             </select>
         </div>
-        <div class="col-6 col-md-2">
+        <div class="col-6">
             <input v-model="form.reference" class="form-control" placeholder="Ref / UTR">
         </div>
-        <div class="col-12 col-md-2 d-grid">
+        <div class="col-12 d-grid">
             <button class="btn btn-brand" type="submit" :disabled="form.processing">Add payment</button>
         </div>
     </form>
