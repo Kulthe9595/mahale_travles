@@ -1,19 +1,61 @@
 <?php
 
 use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\BillPreviewController;
+use App\Http\Controllers\TripController;
+use App\Http\Controllers\CarController;
+use App\Http\Controllers\CustomerController;
+use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\DriverController;
+use App\Http\Controllers\InvoiceController;
+use App\Http\Controllers\PaymentController;
+use App\Http\Controllers\PdfController;
+use App\Http\Controllers\PublicBillController;
+use App\Http\Controllers\ReportController;
+use App\Http\Controllers\ShareController;
 use App\Http\Controllers\SettingsController;
 use Illuminate\Support\Facades\Route;
-use Inertia\Inertia;
 
 Route::middleware('guest')->group(function () {
     Route::get('/login', [LoginController::class, 'create'])->name('login');
     Route::post('/login', [LoginController::class, 'store']);
 });
 
+Route::get('/b/{token}', PublicBillController::class)
+    ->where('token', '[A-Za-z0-9]{40,64}')
+    ->middleware('throttle:60,1')
+    ->name('bills.public');
+
 Route::post('/logout', [LoginController::class, 'destroy'])->middleware('auth')->name('logout');
 
 Route::middleware(['auth', 'app.user'])->group(function () {
-    Route::get('/', fn () => Inertia::render('Dashboard'))->name('dashboard');
+    Route::get('/', DashboardController::class)->name('dashboard');
+
+    Route::resource('cars', CarController::class)->except('show');
+    Route::resource('drivers', DriverController::class)->except('show');
+    Route::get('/customers/search', [CustomerController::class, 'search'])->name('customers.search');
+    Route::resource('customers', CustomerController::class)->except(['destroy']);
+
+    Route::resource('trips', TripController::class)->except('destroy');
+    Route::post('/trips/{trip}/invoice', [InvoiceController::class, 'store'])->name('invoices.store');
+    Route::post('/invoices/{invoice}/refresh', [InvoiceController::class, 'refresh'])->name('invoices.refresh');
+    Route::post('/invoices/{invoice}/cancel', [InvoiceController::class, 'cancel'])->name('invoices.cancel');
+    Route::post('/invoices/{invoice}/reissue', [InvoiceController::class, 'reissue'])->name('invoices.reissue');
+    Route::post('/trips/{trip}/payments', [PaymentController::class, 'store'])->name('payments.store');
+    Route::delete('/payments/{payment}', [PaymentController::class, 'destroy'])->name('payments.destroy');
+    Route::get('/invoices/{invoice}/pdf', [PdfController::class, 'invoice'])->name('invoices.pdf');
+    Route::get('/payments/{payment}/receipt', [PdfController::class, 'receipt'])->name('payments.receipt');
+    Route::post('/invoices/{invoice}/share', [ShareController::class, 'invoice'])->name('invoices.share');
+    Route::post('/invoices/{invoice}/email', [ShareController::class, 'email'])->name('invoices.email');
+    Route::post('/invoices/{invoice}/link', [ShareController::class, 'link'])->name('invoices.link');
+    Route::post('/payments/{payment}/share', [ShareController::class, 'payment'])->name('payments.share');
+    Route::post('/bill-preview', BillPreviewController::class)->name('bill.preview');
+
+    Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
+    Route::get('/reports/earnings', [ReportController::class, 'earnings'])->name('reports.earnings');
+    Route::get('/reports/gst', [ReportController::class, 'gst'])->name('reports.gst');
+    Route::get('/reports/gst/export', [ReportController::class, 'gstExport'])->name('reports.gst.export');
+    Route::get('/reports/outstanding', [ReportController::class, 'outstanding'])->name('reports.outstanding');
 
     Route::get('/settings', [SettingsController::class, 'edit'])->name('settings.edit');
     Route::post('/settings', [SettingsController::class, 'update'])->name('settings.update');

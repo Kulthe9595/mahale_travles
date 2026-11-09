@@ -3,6 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\BusinessSetting;
+use App\Support\Gstin;
+use App\Support\IndianStates;
+use Illuminate\Validation\Rule;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
@@ -19,6 +22,7 @@ class SettingsController extends Controller
 
         return Inertia::render('Settings/Edit', [
             'settings' => $settings,
+            'states' => IndianStates::names(),
             'logoUrl' => $settings->logo_path ? Storage::disk('public')->url($settings->logo_path) : null,
         ]);
     }
@@ -27,15 +31,15 @@ class SettingsController extends Controller
     {
         Gate::authorize('manage-settings');
 
-        $request->merge(['gstin' => $request->filled('gstin') ? strtoupper(trim($request->input('gstin'))) : null]);
+        $request->merge(['gstin' => Gstin::normalize($request->input('gstin'))]);
 
         $data = $request->validate([
             'name' => ['required', 'string', 'max:150'],
             'address' => ['nullable', 'string', 'max:500'],
             'phone' => ['nullable', 'string', 'max:20'],
             'email' => ['nullable', 'email', 'max:150'],
-            'gstin' => ['nullable', 'regex:/^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z][1-9A-Z]Z[0-9A-Z]$/'],
-            'state' => ['required', 'string', 'max:60'],
+            'gstin' => ['nullable', Gstin::RULE],
+            'state' => ['required', Rule::in(IndianStates::names())],
             'sac_code' => ['required', 'string', 'max:10'],
             'gst_rate' => ['required', 'numeric', 'min:0', 'max:28'],
             'min_km_per_day' => ['required', 'integer', 'min:0', 'max:1000'],
@@ -45,8 +49,13 @@ class SettingsController extends Controller
             'terms' => ['nullable', 'string', 'max:2000'],
             'logo' => ['nullable', 'image', 'max:1024'],
         ], [
-            'gstin.regex' => 'Enter a valid 15-character GSTIN.',
+            'gstin.regex' => Gstin::MESSAGE,
+            'state.in' => 'Choose a state from the list.',
         ]);
+
+        if (! IndianStates::gstinMatches($data['gstin'] ?? null, $data['state'])) {
+            return back()->withErrors(['gstin' => 'This GSTIN belongs to a different state than the one selected.'])->withInput();
+        }
 
         $settings = BusinessSetting::current();
 
