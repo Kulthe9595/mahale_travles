@@ -6,6 +6,7 @@ use App\Http\Controllers\TripController;
 use App\Http\Controllers\CarController;
 use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\DriverController;
+use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\SettingsController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -26,6 +27,9 @@ Route::middleware(['auth', 'app.user'])->group(function () {
     Route::resource('customers', CustomerController::class)->except(['show', 'destroy']);
 
     Route::resource('trips', TripController::class)->except('destroy');
+    Route::post('/trips/{trip}/invoice', [InvoiceController::class, 'store'])->name('invoices.store');
+    Route::post('/invoices/{invoice}/refresh', [InvoiceController::class, 'refresh'])->name('invoices.refresh');
+    Route::post('/invoices/{invoice}/reissue', [InvoiceController::class, 'reissue'])->name('invoices.reissue');
     Route::post('/bill-preview', BillPreviewController::class)->name('bill.preview');
 
     Route::get('/settings', [SettingsController::class, 'edit'])->name('settings.edit');

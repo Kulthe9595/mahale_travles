@@ -10,6 +10,8 @@ use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use InvalidArgumentException;
 
 class Trip extends Model
@@ -54,6 +56,16 @@ class Trip extends Model
     public function driver(): BelongsTo
     {
         return $this->belongsTo(Driver::class);
+    }
+
+    public function invoices(): HasMany
+    {
+        return $this->hasMany(Invoice::class);
+    }
+
+    public function activeInvoice(): HasOne
+    {
+        return $this->hasOne(Invoice::class)->where('status', Invoice::STATUS_ACTIVE)->latestOfMany();
     }
 
     public function toBillInput(BusinessSetting $settings): BillInput
