@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Billing\BillInput;
+use App\Enums\PaymentStatus;
 use App\Enums\TripStatus;
 use App\Enums\TripType;
 use App\Support\Money;
@@ -66,6 +67,46 @@ class Trip extends Model
     public function activeInvoice(): HasOne
     {
         return $this->hasOne(Invoice::class)->where('status', Invoice::STATUS_ACTIVE)->latestOfMany();
+    }
+
+    public function payments(): HasMany
+    {
+        return $this->hasMany(Payment::class)->orderBy('paid_on')->orderBy('id');
+    }
+
+    public function paidPaise(): int
+    {
+        return (int) $this->payments->sum(fn (Payment $p) => $p->amountPaise());
+    }
+
+    /** Null until the trip has an active bill; never negative. */
+    public function balanceDuePaise(): ?int
+    {
+        $invoice = $this->activeInvoice;
+
+        return $invoice ? max(0, $invoice->totalPaise() - $this->paidPaise()) : null;
+    }
+
+    public function excessPaise(): int
+    {
+        $invoice = $this->activeInvoice;
+
+        return $invoice ? max(0, $this->paidPaise() - $invoice->totalPaise()) : 0;
+    }
+
+    public function paymentStatus(): ?PaymentStatus
+    {
+        if (! $this->activeInvoice) {
+            return null;
+        }
+
+        $paid = $this->paidPaise();
+
+        return match (true) {
+            $paid <= 0 => PaymentStatus::Unpaid,
+            $paid < $this->activeInvoice->totalPaise() => PaymentStatus::PartlyPaid,
+            default => PaymentStatus::Paid,
+        };
     }
 
     public function toBillInput(BusinessSetting $settings): BillInput
