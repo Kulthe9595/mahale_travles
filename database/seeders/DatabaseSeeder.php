@@ -2,24 +2,28 @@
 
 namespace Database\Seeders;
 
+use App\Enums\Role;
+use App\Models\BusinessSetting;
 use App\Models\User;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
 {
-    use WithoutModelEvents;
-
-    /**
-     * Seed the application's database.
-     */
+    /** Creates the owner login from OWNER_EMAIL / OWNER_PASSWORD and the settings row. */
     public function run(): void
     {
-        // User::factory(10)->create();
+        $email = env('OWNER_EMAIL');
+        $password = env('OWNER_PASSWORD');
 
-        User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
-        ]);
+        if ($email && $password) {
+            User::query()->updateOrCreate(
+                ['email' => $email],
+                ['name' => env('OWNER_NAME', 'Owner'), 'password' => $password, 'role' => Role::Owner],
+            );
+        } else {
+            $this->command?->warn('Set OWNER_EMAIL and OWNER_PASSWORD in .env to create the owner login.');
+        }
+
+        BusinessSetting::current();
     }
 }
