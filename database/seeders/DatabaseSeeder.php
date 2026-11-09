@@ -24,6 +24,24 @@ class DatabaseSeeder extends Seeder
             $this->command?->warn('Set OWNER_EMAIL and OWNER_PASSWORD in .env to create the owner login.');
         }
 
-        BusinessSetting::current();
+        $this->fillBusinessDetails(BusinessSetting::current());
+    }
+
+    /** Contact details from mahalestravels.in; only fills fields that are still empty. */
+    private function fillBusinessDetails(BusinessSetting $settings): void
+    {
+        $defaults = [
+            'phone' => '+91 97656 79191',
+            'email' => 'mahale.veeru1@gmail.com',
+            'address' => 'Navale Colony, Nashik–Pune Highway, near Shivaji Maharaj Statue, Nashik Road, Maharashtra',
+        ];
+
+        foreach ($defaults as $field => $value) {
+            if (blank($settings->{$field})) {
+                $settings->{$field} = $value;
+            }
+        }
+
+        $settings->save();
     }
 }
