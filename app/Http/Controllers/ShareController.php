@@ -9,7 +9,9 @@ use App\Services\ShareService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rule;
+use Symfony\Component\Mailer\Exception\TransportExceptionInterface;
 
 class ShareController extends Controller
 {
@@ -34,7 +36,15 @@ class ShareController extends Controller
     public function email(Request $request, Invoice $invoice): RedirectResponse
     {
         $data = $request->validate(['to' => ['required', 'email', 'max:150']]);
-        $this->share->email($invoice, $data['to']);
+
+        try {
+            $this->share->email($invoice, $data['to']);
+        } catch (TransportExceptionInterface $e) {
+            Log::warning('Bill email failed', ['invoice' => $invoice->id, 'error' => $e->getMessage()]);
+
+            return redirect("/trips/{$invoice->trip_id}")
+                ->with('error', 'Email could not be sent. Check the mail settings (Gmail app password).');
+        }
 
         return redirect("/trips/{$invoice->trip_id}")->with('success', "Bill emailed to {$data['to']}.");
     }

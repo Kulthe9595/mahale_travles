@@ -2,7 +2,7 @@
 import { ref, watch } from 'vue';
 import { getJson, postJson } from '../http.js';
 
-const props = defineProps({ initial: Object, error: String });
+const props = defineProps({ initial: Object, error: String, states: { type: Array, default: () => ['Maharashtra'] } });
 const emit = defineEmits(['selected']);
 
 const selected = ref(props.initial ?? null);
@@ -91,7 +91,10 @@ const saveNew = async () => {
                     <input v-model="newCustomer.phone" type="tel" class="form-control" placeholder="Phone (WhatsApp)">
                 </div>
                 <div class="col-md-4">
-                    <input v-model="newCustomer.state" class="form-control" placeholder="State">
+                    <select v-model="newCustomer.state" class="form-select" :class="{ 'is-invalid': newErrors.state }" aria-label="State">
+                        <option v-for="st in states" :key="st" :value="st">{{ st }}</option>
+                    </select>
+                    <div class="invalid-feedback">{{ newErrors.state }}</div>
                 </div>
                 <div class="col-md-4">
                     <input v-model="newCustomer.gstin" class="form-control" :class="{ 'is-invalid': newErrors.gstin }" placeholder="GSTIN (optional)">

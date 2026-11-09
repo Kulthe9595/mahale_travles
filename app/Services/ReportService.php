@@ -29,7 +29,7 @@ class ReportService
                 return [
                     'car' => $car,
                     'trips' => $bills->count(),
-                    'km' => (int) $bills->sum(fn (Invoice $i) => max(0, (int) $i->trip->end_km - (int) $i->trip->start_km)),
+                    'km' => (int) $bills->sum(fn (Invoice $i) => (int) ($i->meta['actual_km'] ?? max(0, (int) $i->trip->end_km - (int) $i->trip->start_km))),
                     'revenue_paise' => (int) $bills->sum(fn (Invoice $i) => $i->totalPaise()),
                 ];
             })

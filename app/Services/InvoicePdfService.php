@@ -42,10 +42,14 @@ class InvoicePdfService
         $paid = $trip->paidPaise();
         $upi = $this->upiUri($invoice);
 
+        $snap = $this->snapshotFor($invoice);
+
         return view('pdf.invoice', [
             'invoice' => $invoice,
-            'trip' => $trip,
-            'customer' => $trip->customer,
+            'trip' => $snap['trip'],
+            'car' => $snap['car'],
+            'driver' => $snap['driver'],
+            'customer' => $snap['customer'],
             'settings' => $settings,
             'logo' => $this->logoDataUri($settings),
             'isGst' => $invoice->gst_enabled,
@@ -62,6 +66,40 @@ class InvoicePdfService
             'words' => Money::inWords($total),
             'unit' => fn (string $d, $qty) => $this->unitFor($d, (float) $qty),
         ])->render();
+    }
+
+    /**
+     * The bill-to, vehicle and trip details as they were when the bill was issued.
+     * Bills made before snapshots existed fall back to the live records.
+     */
+    private function snapshotFor(Invoice $invoice): array
+    {
+        $tz = config('app.timezone');
+        $snap = $invoice->meta['snapshot'] ?? null;
+        $trip = $invoice->trip;
+
+        if (! $snap) {
+            $snap = [
+                'customer' => $trip->customer->only(['name', 'phone', 'email', 'address', 'state', 'gstin']),
+                'car' => $trip->car->only(['registration_no', 'model']),
+                'driver' => $trip->driver?->only(['name', 'phone']),
+                'trip' => $trip->only(['pickup', 'drop', 'start_km', 'end_km']) + [
+                    'start_at' => $trip->start_at?->format('Y-m-d H:i:s'),
+                    'end_at' => $trip->end_at?->format('Y-m-d H:i:s'),
+                ],
+            ];
+        }
+
+        $t = $snap['trip'];
+        $t['start_at'] = $t['start_at'] ? \Carbon\CarbonImmutable::parse($t['start_at'], $tz) : null;
+        $t['end_at'] = $t['end_at'] ? \Carbon\CarbonImmutable::parse($t['end_at'], $tz) : null;
+
+        return [
+            'customer' => (object) $snap['customer'],
+            'car' => (object) $snap['car'],
+            'driver' => $snap['driver'] ? (object) $snap['driver'] : null,
+            'trip' => (object) $t,
+        ];
     }
 
     public function receiptHtml(Payment $payment): string

@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\BusinessSetting;
 use App\Support\Gstin;
+use App\Support\IndianStates;
+use Illuminate\Validation\Rule;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
@@ -20,6 +22,7 @@ class SettingsController extends Controller
 
         return Inertia::render('Settings/Edit', [
             'settings' => $settings,
+            'states' => IndianStates::names(),
             'logoUrl' => $settings->logo_path ? Storage::disk('public')->url($settings->logo_path) : null,
         ]);
     }
@@ -36,7 +39,7 @@ class SettingsController extends Controller
             'phone' => ['nullable', 'string', 'max:20'],
             'email' => ['nullable', 'email', 'max:150'],
             'gstin' => ['nullable', Gstin::RULE],
-            'state' => ['required', 'string', 'max:60'],
+            'state' => ['required', Rule::in(IndianStates::names())],
             'sac_code' => ['required', 'string', 'max:10'],
             'gst_rate' => ['required', 'numeric', 'min:0', 'max:28'],
             'min_km_per_day' => ['required', 'integer', 'min:0', 'max:1000'],
@@ -47,7 +50,12 @@ class SettingsController extends Controller
             'logo' => ['nullable', 'image', 'max:1024'],
         ], [
             'gstin.regex' => Gstin::MESSAGE,
+            'state.in' => 'Choose a state from the list.',
         ]);
+
+        if (! IndianStates::gstinMatches($data['gstin'] ?? null, $data['state'])) {
+            return back()->withErrors(['gstin' => 'This GSTIN belongs to a different state than the one selected.'])->withInput();
+        }
 
         $settings = BusinessSetting::current();
 

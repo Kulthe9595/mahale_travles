@@ -23,7 +23,8 @@ Compute → Instances → Create instance:
 - Add your SSH public key, create.
 
 Networking → your VCN → Security List → add **Ingress rules** for TCP **80** and **443**
-from `0.0.0.0/0`. (The setup script also opens Ubuntu's own firewall.)
+from `0.0.0.0/0`. (The setup script also opens the server's own iptables firewall. Don't
+enable `ufw` on Oracle's Ubuntu images; Oracle advises against it.)
 
 ## 3. Domain
 
@@ -57,13 +58,17 @@ It installs Nginx, PHP 8.3, MySQL, Node, Composer and certbot; creates the datab
 (password saved in `/root/mahale-db.txt`); clones the app to `/var/www/mahale`; builds it;
 gets the HTTPS certificate; and installs the cron jobs (scheduler + 02:30 IST backup).
 
-Then set the owner login and email in `/var/www/mahale/.env`:
+Create the owner login (it asks for the password twice):
+
+```bash
+cd /var/www/mahale && php artisan app:create-owner owner@example.com --name="Jiju's name"
+```
+
+Run the same command again any time to reset the password.
+
+Then add the Gmail settings to `/var/www/mahale/.env`:
 
 ```dotenv
-OWNER_NAME="Jiju's name"
-OWNER_EMAIL=owner@example.com
-OWNER_PASSWORD=choose-a-strong-one
-
 MAIL_MAILER=smtp
 MAIL_HOST=smtp.gmail.com
 MAIL_PORT=587
@@ -73,8 +78,10 @@ MAIL_FROM_ADDRESS=yourname@gmail.com
 ```
 
 ```bash
-cd /var/www/mahale && php artisan db:seed --force && php artisan optimize
+cd /var/www/mahale && php artisan config:clear && php artisan optimize
 ```
+
+Whenever you edit `.env` later, run those two commands again; the app caches its settings.
 
 Log in at `https://<your-domain>`, open **Settings**, and fill in address, GSTIN, UPI ID,
 bank details and logo. Add cars and drivers, and you're ready.

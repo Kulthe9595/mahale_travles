@@ -6,7 +6,7 @@ import CustomerPicker from '../../Components/CustomerPicker.vue';
 import BillPreview from '../../Components/BillPreview.vue';
 import { postJson, rupees } from '../../http.js';
 
-const props = defineProps({ trip: Object, cars: Array, drivers: Array, settings: Object });
+const props = defineProps({ trip: Object, cars: Array, drivers: Array, settings: Object, states: Array });
 
 const t = props.trip ?? {};
 const b = t.billing_inputs ?? {};
@@ -103,8 +103,8 @@ const money = [
     <Head :title="trip ? 'Edit trip' : 'New bill'" />
     <AppLayout :title="trip ? 'Edit trip' : 'New bill'">
         <div v-if="trip?.locked" class="alert alert-warning py-2 small">
-            This trip's bill was already shared and is locked. Changes here will not change that bill —
-            use “Cancel &amp; reissue” on the bill page if the bill itself must change.
+            This trip's bill was already shared and is locked. Changes here will not change that bill,
+            and the customer cannot be changed — use “Cancel &amp; reissue” on the bill page if the bill itself must change.
         </div>
         <form class="has-sticky-bar" @submit.prevent="submit(false)">
             <div class="row g-3">
@@ -112,7 +112,7 @@ const money = [
                     <!-- Customer -->
                     <div class="card mb-3"><div class="card-body">
                         <h2 class="h6">Customer</h2>
-                        <CustomerPicker :initial="trip?.customer" :error="err('customer_id')" @selected="onCustomer" />
+                        <CustomerPicker :initial="trip?.customer" :states="states" :error="err('customer_id')" @selected="onCustomer" />
                     </div></div>
 
                     <!-- Car & driver -->
@@ -163,12 +163,13 @@ const money = [
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label small mb-0">Status</label>
-                                <select v-model="form.status" class="form-select">
+                                <select v-model="form.status" class="form-select" :class="{ 'is-invalid': err('status') }">
                                     <option value="booked">Booked (advance only)</option>
                                     <option value="ongoing">Ongoing</option>
                                     <option value="completed">Completed</option>
                                     <option value="cancelled">Cancelled</option>
                                 </select>
+                                <div class="invalid-feedback">{{ err('status') }}</div>
                             </div>
                         </div>
                     </div></div>

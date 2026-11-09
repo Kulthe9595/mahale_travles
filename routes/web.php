@@ -39,6 +39,7 @@ Route::middleware(['auth', 'app.user'])->group(function () {
     Route::resource('trips', TripController::class)->except('destroy');
     Route::post('/trips/{trip}/invoice', [InvoiceController::class, 'store'])->name('invoices.store');
     Route::post('/invoices/{invoice}/refresh', [InvoiceController::class, 'refresh'])->name('invoices.refresh');
+    Route::post('/invoices/{invoice}/cancel', [InvoiceController::class, 'cancel'])->name('invoices.cancel');
     Route::post('/invoices/{invoice}/reissue', [InvoiceController::class, 'reissue'])->name('invoices.reissue');
     Route::post('/trips/{trip}/payments', [PaymentController::class, 'store'])->name('payments.store');
     Route::delete('/payments/{payment}', [PaymentController::class, 'destroy'])->name('payments.destroy');

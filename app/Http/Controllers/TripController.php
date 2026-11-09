@@ -15,8 +15,11 @@ use App\Enums\TripStatus;
 use App\Services\InvoicePdfService;
 use App\Services\InvoiceService;
 use App\Services\ShareService;
+use App\Support\IndianStates;
 use App\Support\Money;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -59,9 +62,11 @@ class TripController extends Controller
 
     public function store(TripRequest $request, InvoiceService $invoices): RedirectResponse
     {
-        $trip = Trip::create($request->tripAttributes());
+        return DB::transaction(function () use ($request, $invoices) {
+            $trip = Trip::create($request->tripAttributes());
 
-        return $this->afterSave($request, $trip, $invoices, 'Trip saved.');
+            return $this->afterSave($request, $trip, $invoices, 'Trip saved.');
+        });
     }
 
     public function show(Request $request, Trip $trip, ShareService $share, InvoicePdfService $pdf): Response
@@ -148,6 +153,7 @@ class TripController extends Controller
             ] : null,
             'canGenerate' => ! $invoice && $hasEndDetails,
             'canDeletePayments' => $request->user()->isOwner(),
+            'canCancelBill' => $request->user()->isOwner(),
             'gstRegistered' => (bool) $settings->gstin,
             'today' => now()->toDateString(),
         ]);
@@ -160,9 +166,33 @@ class TripController extends Controller
 
     public function update(TripRequest $request, Trip $trip, InvoiceService $invoices): RedirectResponse
     {
-        $trip->update($request->tripAttributes());
+        $attributes = $request->tripAttributes();
+        $invoice = $trip->activeInvoice()->first();
 
-        return $this->afterSave($request, $trip, $invoices, 'Trip updated.');
+        if ($invoice && $attributes['status'] === TripStatus::Cancelled->value) {
+            throw ValidationException::withMessages([
+                'status' => 'This trip has a bill. Cancel the bill first, then cancel the trip.',
+            ]);
+        }
+
+        if ($invoice?->isLocked() && (int) $attributes['customer_id'] !== $trip->customer_id) {
+            throw ValidationException::withMessages([
+                'customer_id' => 'The bill was already shared, so the customer cannot change. Use “Cancel & reissue”.',
+            ]);
+        }
+
+        return DB::transaction(function () use ($request, $trip, $invoices, $attributes, $invoice) {
+            $trip->update($attributes);
+
+            // An unshared bill always follows the trip; a shared (locked) bill stays frozen.
+            if ($invoice && ! $invoice->isLocked()) {
+                $invoices->refresh($invoice);
+
+                return redirect("/trips/{$trip->id}")->with('success', 'Trip and bill updated.');
+            }
+
+            return $this->afterSave($request, $trip, $invoices, 'Trip updated.');
+        });
     }
 
     /** "Save & create bill": generate a new bill, or refresh an unlocked one, for completed trips. */
@@ -235,6 +265,7 @@ class TripController extends Controller
                 ->where(fn ($q) => $q->where('is_active', true)->orWhere('id', $trip?->driver_id))
                 ->orderBy('name')
                 ->get(['id', 'name', 'phone']),
+            'states' => IndianStates::names(),
             'settings' => [
                 'min_km_per_day' => (int) $settings->min_km_per_day,
                 'gst_rate' => $settings->gst_rate,

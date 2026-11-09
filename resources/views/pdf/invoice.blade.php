@@ -43,8 +43,8 @@
     <tr>
         <td style="width: 34%">
             <div class="muted small">VEHICLE</div>
-            {{ $trip->car->registration_no }}<br>{{ $trip->car->model }}
-            @if ($trip->driver)<br><span class="muted">Driver:</span> {{ $trip->driver->name }}@endif
+            {{ $car->registration_no }}<br>{{ $car->model }}
+            @if ($driver)<br><span class="muted">Driver:</span> {{ $driver->name }}@endif
         </td>
         <td style="width: 33%">
             <div class="muted small">ROUTE</div>

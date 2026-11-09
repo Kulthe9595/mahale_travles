@@ -26,6 +26,10 @@ class InvoiceService
         return DB::transaction(function () use ($trip, $revisionOfId) {
             $locked = Trip::query()->whereKey($trip->id)->lockForUpdate()->firstOrFail();
 
+            if ($locked->status === TripStatus::Cancelled) {
+                throw ValidationException::withMessages(['trip' => 'This trip is cancelled.']);
+            }
+
             if ($locked->invoices()->where('status', Invoice::STATUS_ACTIVE)->exists()) {
                 throw ValidationException::withMessages(['trip' => 'This trip already has a bill.']);
             }
@@ -83,6 +87,16 @@ class InvoiceService
         }
     }
 
+    /** Voids a bill without issuing a new number; the number stays used. */
+    public function cancel(Invoice $invoice): void
+    {
+        if (! $invoice->isActive()) {
+            throw ValidationException::withMessages(['invoice' => 'This bill is already cancelled.']);
+        }
+
+        $invoice->update(['status' => Invoice::STATUS_CANCELLED]);
+    }
+
     public function cancelAndReissue(Invoice $invoice): Invoice
     {
         if (! $invoice->isActive()) {
@@ -126,6 +140,28 @@ class InvoiceService
                 'hours' => $r->hours,
                 'actual_km' => $r->actualKm,
                 'billable_km' => $r->billableKm,
+                'snapshot' => $this->snapshot($trip),
+            ],
+        ];
+    }
+
+    /** Printed details frozen at billing time, so a shared bill never changes. */
+    private function snapshot(Trip $trip): array
+    {
+        $trip->loadMissing(['customer', 'car', 'driver']);
+        $tz = config('app.timezone');
+
+        return [
+            'customer' => $trip->customer->only(['name', 'phone', 'email', 'address', 'state', 'gstin']),
+            'car' => $trip->car->only(['registration_no', 'model']),
+            'driver' => $trip->driver?->only(['name', 'phone']),
+            'trip' => [
+                'pickup' => $trip->pickup,
+                'drop' => $trip->drop,
+                'start_at' => $trip->start_at?->setTimezone($tz)->format('Y-m-d H:i:s'),
+                'end_at' => $trip->end_at?->setTimezone($tz)->format('Y-m-d H:i:s'),
+                'start_km' => $trip->start_km,
+                'end_km' => $trip->end_km,
             ],
         ];
     }

@@ -6,6 +6,8 @@ use App\Models\Customer;
 use App\Models\Trip;
 use App\Support\Money;
 use App\Support\Gstin;
+use App\Support\IndianStates;
+use Illuminate\Validation\Rule;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -36,7 +38,7 @@ class CustomerController extends Controller
 
     public function create(): Response
     {
-        return Inertia::render('Customers/Form', ['customer' => null]);
+        return Inertia::render('Customers/Form', ['customer' => null, 'states' => IndianStates::names()]);
     }
 
     public function store(Request $request): RedirectResponse|JsonResponse
@@ -87,7 +89,7 @@ class CustomerController extends Controller
 
     public function edit(Customer $customer): Response
     {
-        return Inertia::render('Customers/Form', ['customer' => $customer]);
+        return Inertia::render('Customers/Form', ['customer' => $customer, 'states' => IndianStates::names()]);
     }
 
     public function update(Request $request, Customer $customer): RedirectResponse
@@ -116,15 +118,29 @@ class CustomerController extends Controller
 
     private function validated(Request $request): array
     {
-        $request->merge(['gstin' => Gstin::normalize($request->input('gstin'))]);
+        $request->merge([
+            'gstin' => Gstin::normalize($request->input('gstin')),
+            'state' => $request->filled('state') ? trim($request->input('state')) : 'Maharashtra',
+        ]);
 
-        return $request->validate([
+        $data = $request->validate([
             'name' => ['required', 'string', 'max:150'],
             'phone' => ['nullable', 'string', 'max:25'],
             'email' => ['nullable', 'email', 'max:150'],
             'address' => ['nullable', 'string', 'max:500'],
-            'state' => ['nullable', 'string', 'max:60'],
+            'state' => ['required', Rule::in(IndianStates::names())],
             'gstin' => ['nullable', Gstin::RULE],
-        ], ['gstin.regex' => Gstin::MESSAGE]);
+        ], [
+            'gstin.regex' => Gstin::MESSAGE,
+            'state.in' => 'Choose a state from the list.',
+        ]);
+
+        if (! IndianStates::gstinMatches($data['gstin'] ?? null, $data['state'])) {
+            throw \Illuminate\Validation\ValidationException::withMessages([
+                'gstin' => 'This GSTIN belongs to a different state than the one selected.',
+            ]);
+        }
+
+        return $data;
     }
 }

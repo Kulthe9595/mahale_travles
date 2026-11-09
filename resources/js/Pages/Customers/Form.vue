@@ -3,7 +3,7 @@ import { Head, Link, useForm } from '@inertiajs/vue3';
 import AppLayout from '../../Layouts/AppLayout.vue';
 import FormField from '../../Components/FormField.vue';
 
-const props = defineProps({ customer: Object });
+const props = defineProps({ customer: Object, states: Array });
 const c = props.customer ?? {};
 const form = useForm({
     name: c.name ?? '',
@@ -25,8 +25,14 @@ const submit = () => (props.customer ? form.put(`/customers/${props.customer.id}
                 <FormField id="phone" v-model="form.phone" class="col-md-6" type="tel" label="Phone (WhatsApp)"
                            :error="form.errors.phone" />
                 <FormField id="email" v-model="form.email" class="col-md-6" type="email" label="Email" :error="form.errors.email" />
-                <FormField id="state" v-model="form.state" class="col-md-6" label="State" :error="form.errors.state"
-                           help="Decides CGST+SGST (Maharashtra) or IGST (other states)" />
+                <div class="col-md-6">
+                    <label class="form-label" for="state">State</label>
+                    <select id="state" v-model="form.state" class="form-select" :class="{ 'is-invalid': form.errors.state }">
+                        <option v-for="st in states" :key="st" :value="st">{{ st }}</option>
+                    </select>
+                    <div class="form-text">Decides CGST+SGST (same state) or IGST (other states)</div>
+                    <div class="invalid-feedback">{{ form.errors.state }}</div>
+                </div>
                 <FormField id="address" v-model="form.address" class="col-12" textarea label="Address" :error="form.errors.address" />
                 <FormField id="gstin" v-model="form.gstin" class="col-md-6" label="GSTIN (companies only)" :error="form.errors.gstin" />
             </div>

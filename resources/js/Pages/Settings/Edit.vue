@@ -2,7 +2,7 @@
 import { Head, useForm } from '@inertiajs/vue3';
 import AppLayout from '../../Layouts/AppLayout.vue';
 
-const props = defineProps({ settings: Object, logoUrl: String });
+const props = defineProps({ settings: Object, logoUrl: String, states: Array });
 
 const s = props.settings;
 const form = useForm({
@@ -28,7 +28,6 @@ const fields = [
     { key: 'phone', label: 'Phone', col: 'col-md-6' },
     { key: 'email', label: 'Email', col: 'col-md-6', type: 'email' },
     { key: 'gstin', label: 'GSTIN (leave empty if not registered)', col: 'col-md-6' },
-    { key: 'state', label: 'State', col: 'col-md-6' },
     { key: 'sac_code', label: 'SAC code', col: 'col-md-4' },
     { key: 'gst_rate', label: 'GST rate (%)', col: 'col-md-4', type: 'number' },
     { key: 'min_km_per_day', label: 'Minimum km per day (0 = none)', col: 'col-md-4', type: 'number' },
@@ -53,6 +52,13 @@ const submit = () => form.post('/settings', { forceFormData: true, preserveScrol
                     <input v-else :id="f.key" v-model="form[f.key]" :type="f.type || 'text'" step="any"
                            class="form-control" :class="{ 'is-invalid': form.errors[f.key] }">
                     <div class="invalid-feedback">{{ form.errors[f.key] }}</div>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label" for="state">State</label>
+                    <select id="state" v-model="form.state" class="form-select" :class="{ 'is-invalid': form.errors.state }">
+                        <option v-for="st in states" :key="st" :value="st">{{ st }}</option>
+                    </select>
+                    <div class="invalid-feedback">{{ form.errors.state }}</div>
                 </div>
                 <div class="col-12">
                     <label class="form-label" for="logo">Logo</label>

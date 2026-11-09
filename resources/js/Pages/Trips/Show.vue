@@ -9,7 +9,7 @@ import { rupees } from '../../http.js';
 
 const props = defineProps({
     trip: Object, invoice: Object, cancelledInvoices: Array, money: Object, payments: Array,
-    shareLogs: Array, share: Object, canGenerate: Boolean, canDeletePayments: Boolean,
+    shareLogs: Array, share: Object, canGenerate: Boolean, canDeletePayments: Boolean, canCancelBill: Boolean,
     gstRegistered: Boolean, today: String,
 });
 
@@ -18,6 +18,11 @@ const refreshBill = () => router.post(`/invoices/${props.invoice.id}/refresh`, {
 const reissue = () => {
     if (confirm(`Cancel ${props.invoice.invoice_no} and issue a new bill number with the current trip details?`)) {
         router.post(`/invoices/${props.invoice.id}/reissue`, {}, { preserveScroll: true });
+    }
+};
+const cancelBill = () => {
+    if (confirm(`Cancel bill ${props.invoice.invoice_no}? The number stays used and the bill is marked CANCELLED.`)) {
+        router.post(`/invoices/${props.invoice.id}/cancel`, {}, { preserveScroll: true });
     }
 };
 const toggleLink = () => router.post(`/invoices/${props.invoice.id}/link`, { enabled: !props.invoice.share_enabled }, { preserveScroll: true });
@@ -94,6 +99,7 @@ const flashErrors = (errors) => errors?.trip ?? errors?.invoice;
                                 <button class="btn btn-sm btn-outline-secondary" @click="showEmail = !showEmail">Email</button>
                                 <button v-if="!invoice.locked" class="btn btn-sm btn-outline-secondary" @click="refreshBill">Update bill from trip</button>
                                 <button v-else class="btn btn-sm btn-outline-danger" @click="reissue">Cancel &amp; reissue</button>
+                                <button v-if="canCancelBill" class="btn btn-sm btn-outline-danger" @click="cancelBill">Cancel bill</button>
                                 <button class="btn btn-sm btn-link text-decoration-none" @click="toggleLink">
                                     {{ invoice.share_enabled ? 'Turn off bill link' : 'Turn on bill link' }}
                                 </button>

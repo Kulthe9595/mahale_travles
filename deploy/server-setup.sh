@@ -23,7 +23,7 @@ timedatectl set-timezone Asia/Kolkata
 
 echo "==> Packages"
 apt-get update -y
-apt-get install -y software-properties-common curl git unzip ufw cron \
+apt-get install -y software-properties-common curl git unzip cron iptables-persistent \
     nginx mysql-server certbot python3-certbot-nginx rclone \
     "php${PHP}-fpm" "php${PHP}-cli" "php${PHP}-mysql" "php${PHP}-mbstring" "php${PHP}-xml" \
     "php${PHP}-gd" "php${PHP}-zip" "php${PHP}-intl" "php${PHP}-bcmath" "php${PHP}-curl" "php${PHP}-sqlite3"
@@ -47,16 +47,14 @@ if ! swapon --show | grep -q '/swapfile'; then
 fi
 
 echo "==> Firewall"
-ufw allow OpenSSH
-ufw allow 'Nginx Full'
-ufw --force enable
-# Oracle's Ubuntu images ship iptables rules that reject 80/443 even when the
-# VCN security list allows them. Open them and persist.
-if iptables -L INPUT -n | grep -q 'REJECT'; then
-    iptables -I INPUT 6 -m state --state NEW -p tcp --dport 80 -j ACCEPT
-    iptables -I INPUT 6 -m state --state NEW -p tcp --dport 443 -j ACCEPT
-    if command -v netfilter-persistent >/dev/null; then netfilter-persistent save; fi
-fi
+# Oracle's Ubuntu images manage the firewall with iptables (Oracle advises against ufw).
+# Their default rules reject 80/443 even when the VCN security list allows them.
+for port in 443 80; do
+    if ! iptables -C INPUT -m state --state NEW -p tcp --dport "$port" -j ACCEPT 2>/dev/null; then
+        iptables -I INPUT 6 -m state --state NEW -p tcp --dport "$port" -j ACCEPT
+    fi
+done
+netfilter-persistent save
 
 echo "==> Database"
 if [[ ! -f /root/mahale-db.txt ]]; then
@@ -70,6 +68,8 @@ fi
 DB_PASS="$(cat /root/mahale-db.txt)"
 
 echo "==> Code"
+mkdir -p /root/.ssh
+ssh-keyscan -t ed25519 github.com >> /root/.ssh/known_hosts 2>/dev/null
 if [[ ! -d "$APP_DIR/.git" ]]; then
     git clone "$REPO" "$APP_DIR"
 fi
@@ -88,6 +88,7 @@ if [[ ! -f .env ]]; then
     set_env DB_USERNAME "$DB_USER"
     set_env DB_PASSWORD "$DB_PASS"
     set_env SESSION_SECURE_COOKIE true
+    set_env LOG_LEVEL warning
 fi
 
 composer install --no-dev --optimize-autoloader --no-interaction
@@ -155,5 +156,7 @@ chmod 644 /etc/cron.d/mahale
 
 echo
 echo "Done: https://${DOMAIN}"
-echo "Next: set OWNER_EMAIL/OWNER_PASSWORD and MAIL_* in ${APP_DIR}/.env, run 'php artisan db:seed --force',"
-echo "      and configure the Google Drive backup remote with 'rclone config' (see docs/DEPLOY.md)."
+echo "Next:"
+echo "  1. Create the owner login:   cd ${APP_DIR} && php artisan app:create-owner you@example.com --name=\"Your Name\""
+echo "  2. Gmail settings: edit ${APP_DIR}/.env (MAIL_*), then run: php artisan config:clear && php artisan optimize"
+echo "  3. Backups: rclone config (see docs/DEPLOY.md)"
