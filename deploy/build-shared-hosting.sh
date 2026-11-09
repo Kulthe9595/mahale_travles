@@ -15,6 +15,8 @@ git -C "$ROOT" archive HEAD | tar -x -C "$PKG"
 cd "$PKG"
 echo "==> PHP packages (no dev)"
 composer install --no-dev --optimize-autoloader --no-interaction --quiet
+# Packages fetched from source carry their git history; the app never needs it.
+find vendor -type d -name .git -prune -exec rm -rf {} +
 echo "==> Building CSS/JS"
 npm ci --silent
 npm run build >/dev/null
