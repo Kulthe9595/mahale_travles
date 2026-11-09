@@ -43,7 +43,7 @@ class DriverController extends Controller
 
     public function destroy(Driver $driver): RedirectResponse
     {
-        if (method_exists($driver, 'trips') && $driver->trips()->exists()) {
+        if ($driver->trips()->exists()) {
             return back()->with('error', 'This driver is used in bills. Mark them inactive instead.');
         }
         $driver->delete();

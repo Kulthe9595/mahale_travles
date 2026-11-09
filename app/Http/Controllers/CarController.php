@@ -54,7 +54,7 @@ class CarController extends Controller
 
     private function isUsed(Car $car): bool
     {
-        return method_exists($car, 'trips') && $car->trips()->exists();
+        return $car->trips()->exists();
     }
 
     private function validated(Request $request, ?Car $car = null): array

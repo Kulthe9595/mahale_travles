@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\BillPreviewController;
+use App\Http\Controllers\TripController;
 use App\Http\Controllers\CarController;
 use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\DriverController;
@@ -22,6 +24,9 @@ Route::middleware(['auth', 'app.user'])->group(function () {
     Route::resource('drivers', DriverController::class)->except('show');
     Route::get('/customers/search', [CustomerController::class, 'search'])->name('customers.search');
     Route::resource('customers', CustomerController::class)->except(['show', 'destroy']);
+
+    Route::resource('trips', TripController::class)->except('destroy');
+    Route::post('/bill-preview', BillPreviewController::class)->name('bill.preview');
 
     Route::get('/settings', [SettingsController::class, 'edit'])->name('settings.edit');
     Route::post('/settings', [SettingsController::class, 'update'])->name('settings.update');

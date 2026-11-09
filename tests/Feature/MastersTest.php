@@ -151,6 +151,11 @@ class MastersTest extends TestCase
 
     public function test_cannot_delete_car_used_by_a_trip(): void
     {
-        $this->markTestIncomplete('Enabled in Task 5 once trips exist.');
+        $car = Car::factory()->create();
+        \App\Models\Trip::factory()->create(['car_id' => $car->id]);
+
+        $this->actingAs($this->owner())->delete("/cars/{$car->id}")
+            ->assertSessionHas('error');
+        $this->assertNotNull($car->fresh());
     }
 }

@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Customer extends Model
 {
@@ -19,5 +20,10 @@ class Customer extends Model
             $c->gstin = $c->gstin ? strtoupper(trim($c->gstin)) : null;
             $c->state = $c->state ? trim($c->state) : 'Maharashtra';
         });
+    }
+
+    public function trips(): HasMany
+    {
+        return $this->hasMany(Trip::class);
     }
 }
