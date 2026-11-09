@@ -44,7 +44,7 @@ HT
 
 echo "==> Production .env"
 APP_KEY="base64:$(head -c 32 /dev/urandom | base64)"
-CODE="MT-$(LC_ALL=C tr -dc 'A-HJ-NP-Z2-9' </dev/urandom | head -c 4)-$(LC_ALL=C tr -dc 'A-HJ-NP-Z2-9' </dev/urandom | head -c 4)"
+CODE="MT-$(openssl rand -hex 3 | tr 'a-f' 'A-F')-$(openssl rand -hex 3 | tr 'a-f' 'A-F')"
 cp .env.example .env
 set_env() { if grep -qE "^#?\s*$1=" .env; then sed -i -E "s|^#?\s*$1=.*|$1=$2|" .env; else echo "$1=$2" >> .env; fi; }
 set_env APP_ENV production
