@@ -15,7 +15,15 @@ git -C "$ROOT" archive HEAD | tar -x -C "$PKG"
 cd "$PKG"
 echo "==> PHP packages (no dev)"
 composer install --no-dev --optimize-autoloader --no-interaction --quiet
-# Packages fetched from source carry their git history; the app never needs it.
+# Packages fetched from source carry tests, docs and git history. Re-export each one the
+# way a normal download would (git archive honours the package's export-ignore rules).
+for pkg in vendor/*/*/; do
+    if [[ -d "$pkg/.git" ]]; then
+        slim="$(mktemp -d)" && chmod 755 "$slim"
+        git -C "$pkg" archive HEAD | tar -x -C "$slim"
+        rm -rf "$pkg" && mv "$slim" "${pkg%/}"
+    fi
+done
 find vendor -type d -name .git -prune -exec rm -rf {} +
 echo "==> Building CSS/JS"
 npm ci --silent
