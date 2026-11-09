@@ -8,6 +8,7 @@ use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\DriverController;
 use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\PaymentController;
+use App\Http\Controllers\PdfController;
 use App\Http\Controllers\SettingsController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -33,6 +34,8 @@ Route::middleware(['auth', 'app.user'])->group(function () {
     Route::post('/invoices/{invoice}/reissue', [InvoiceController::class, 'reissue'])->name('invoices.reissue');
     Route::post('/trips/{trip}/payments', [PaymentController::class, 'store'])->name('payments.store');
     Route::delete('/payments/{payment}', [PaymentController::class, 'destroy'])->name('payments.destroy');
+    Route::get('/invoices/{invoice}/pdf', [PdfController::class, 'invoice'])->name('invoices.pdf');
+    Route::get('/payments/{payment}/receipt', [PdfController::class, 'receipt'])->name('payments.receipt');
     Route::post('/bill-preview', BillPreviewController::class)->name('bill.preview');
 
     Route::get('/settings', [SettingsController::class, 'edit'])->name('settings.edit');
